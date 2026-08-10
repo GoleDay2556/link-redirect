@@ -1,0 +1,32 @@
+{
+  "title": "Lancasters SMP — Links",
+  "logo": "/images/logo-big.png",
+  "invites": [
+    {
+      "id": "discord",
+      "logo": "/images/logo-sqr.png",
+      "name": "Join our **Discord** Server",
+      "link": "https://discord.lancsmp.ru/",
+      "description": "Chat with the community"
+    },
+    {
+      "id": "website",
+      "logo": "/images/logo-sqr.png",
+      "name": "Visit Our **Website**",
+      "link": "https://www.lancsmp.ru/",
+      "description": "Server info, leaderboard, and more"
+    },
+    {
+      "id": "support",
+      "logo": "/images/logo-sqr.png",
+      "name": "**Support** Us",
+      "link": "https://ko-fi.com/lancasters_studios",
+      "description": "Help keep the server running"
+    }
+  ],
+  "footer": {
+    "logo": "/images/logo-sqr.png",
+    "text": "Powered by **Lancasters Studios**",
+    "link": "https://www.lancsmp.ru"
+  }
+}
