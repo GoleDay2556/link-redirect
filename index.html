@@ -44,11 +44,23 @@
       <h1 class="page-title" id="pageTitle">Lancasters SMP</h1>
     </div>
 
-    <div class="cards-container" id="cardsContainer">
-      <div class="loading-state">
-        <div class="loading-spinner"></div>
+    <div class="carousel-wrapper" id="carouselWrapper">
+      <button class="carousel-arrow carousel-prev" id="carouselPrev" aria-label="Previous slide">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="carousel-viewport" id="carouselViewport">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
       </div>
+      <button class="carousel-arrow carousel-next" id="carouselNext" aria-label="Next slide">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+      </button>
     </div>
+
+    <div class="carousel-dots" id="carouselDots"></div>
 
     <div class="page-footer" id="pageFooter"></div>
   </div>

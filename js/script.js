@@ -6,9 +6,9 @@
 
   var params = {};
   var config = null;
+  var currentIndex = 0;
   var redirectTimer = null;
   var redirectSecondsLeft = 0;
-  var redirectCard = null;
 
   function parseParams() {
     var raw = window.location.search.substring(1);
@@ -102,12 +102,9 @@
   }
 
   function buildCard(card) {
-    var el = document.createElement('a');
+    var el = document.createElement('div');
     el.className = 'invite-card';
-    el.href = card.link;
-    el.target = '_blank';
-    el.rel = 'noopener noreferrer';
-    el.id = 'card-' + card.id;
+    el.setAttribute('data-id', card.id);
 
     if (card.logo) {
       var logo = document.createElement('img');
@@ -118,27 +115,30 @@
       el.appendChild(logo);
     }
 
-    var body = document.createElement('div');
-    body.className = 'card-body';
-
     var name = document.createElement('div');
     name.className = 'card-name';
     name.innerHTML = renderMarkdown(card.name);
-    body.appendChild(name);
+    el.appendChild(name);
 
     if (card.description) {
       var desc = document.createElement('div');
       desc.className = 'card-desc';
       desc.textContent = card.description;
-      body.appendChild(desc);
+      el.appendChild(desc);
     }
 
-    el.appendChild(body);
+    var btn = document.createElement('button');
+    btn.className = 'redirect-btn';
+    btn.setAttribute('data-url', card.link);
+    btn.setAttribute('data-name', card.name);
+
+    var span = document.createElement('span');
+    span.textContent = card.link;
+    btn.appendChild(span);
 
     var arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    arrow.setAttribute('class', 'card-arrow');
-    arrow.setAttribute('width', '20');
-    arrow.setAttribute('height', '20');
+    arrow.setAttribute('width', '16');
+    arrow.setAttribute('height', '16');
     arrow.setAttribute('viewBox', '0 0 24 24');
     arrow.setAttribute('fill', 'none');
     arrow.setAttribute('stroke', 'currentColor');
@@ -148,22 +148,145 @@
     var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
     polyline.setAttribute('points', '9 18 15 12 9 6');
     arrow.appendChild(polyline);
-    el.appendChild(arrow);
+    btn.appendChild(arrow);
 
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.open(card.link, '_blank', 'noopener,noreferrer');
+    });
+
+    el.appendChild(btn);
     return el;
   }
 
+  function getCards() {
+    return document.querySelectorAll('.carousel-track .invite-card');
+  }
+
+  function getCardCount() {
+    return getCards().length;
+  }
+
+  function updateArrows() {
+    var prev = document.getElementById('carouselPrev');
+    var next = document.getElementById('carouselNext');
+    var count = getCardCount();
+    if (count <= 1) {
+      prev.disabled = true;
+      next.disabled = true;
+    } else {
+      prev.disabled = currentIndex === 0;
+      next.disabled = currentIndex >= count - 1;
+    }
+  }
+
+  function updateDots() {
+    var dots = document.getElementById('carouselDots');
+    dots.innerHTML = '';
+    var count = getCardCount();
+    for (var i = 0; i < count; i++) {
+      var dot = document.createElement('button');
+      dot.className = 'carousel-dot';
+      if (i === currentIndex) dot.classList.add('active');
+      dot.setAttribute('aria-label', 'Slide ' + (i + 1));
+      dot.addEventListener('click', (function (idx) {
+        return function () { goToSlide(idx); };
+      })(i));
+      dots.appendChild(dot);
+    }
+  }
+
+  function goToSlide(index) {
+    var count = getCardCount();
+    if (count === 0) return;
+    if (index < 0) index = 0;
+    if (index >= count) index = count - 1;
+
+    currentIndex = index;
+
+    var track = document.getElementById('carouselTrack');
+    track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+
+    var cards = getCards();
+    for (var i = 0; i < cards.length; i++) {
+      cards[i].classList.toggle('highlight', i === currentIndex && cards[i].getAttribute('data-id') === params.p);
+    }
+
+    updateArrows();
+    updateDots();
+  }
+
+  function setupDrag() {
+    var viewport = document.getElementById('carouselViewport');
+    var track = document.getElementById('carouselTrack');
+    var startX = 0;
+    var currentX = 0;
+    var dragging = false;
+    var dragOffset = 0;
+
+    function onStart(e) {
+      var count = getCardCount();
+      if (count <= 1) return;
+      dragging = true;
+      viewport.classList.add('dragging');
+      track.classList.add('no-transition');
+      startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+      currentX = startX;
+      dragOffset = 0;
+    }
+
+    function onMove(e) {
+      if (!dragging) return;
+      currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+      dragOffset = currentX - startX;
+      var percentOffset = (dragOffset / viewport.offsetWidth) * 100;
+      track.style.transform = 'translateX(' + (-(currentIndex * 100) + percentOffset) + '%)';
+    }
+
+    function onEnd() {
+      if (!dragging) return;
+      dragging = false;
+      viewport.classList.remove('dragging');
+      track.classList.remove('no-transition');
+
+      var threshold = viewport.offsetWidth * 0.2;
+      if (Math.abs(dragOffset) > threshold) {
+        if (dragOffset < 0) {
+          goToSlide(currentIndex + 1);
+        } else {
+          goToSlide(currentIndex - 1);
+        }
+      } else {
+        goToSlide(currentIndex);
+      }
+
+      dragOffset = 0;
+    }
+
+    viewport.addEventListener('mousedown', onStart);
+    viewport.addEventListener('touchstart', onStart, { passive: true });
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: true });
+
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchend', onEnd);
+  }
+
   function highlightCard(cardId) {
-    var card = document.getElementById('card-' + cardId);
-    if (card) {
-      card.classList.add('highlight');
-      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    var cards = getCards();
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].getAttribute('data-id') === cardId) {
+        goToSlide(i);
+        cards[i].classList.add('highlight');
+        return;
+      }
     }
   }
 
   function startRedirect(card) {
     if (!card || !card.link) return;
-    redirectCard = card;
     redirectSecondsLeft = REDIRECT_DELAY;
 
     var banner = document.getElementById('redirectBanner');
@@ -205,23 +328,24 @@
       redirectTimer = null;
     }
     redirectSecondsLeft = 0;
-    redirectCard = null;
     var banner = document.getElementById('redirectBanner');
     if (banner) banner.classList.remove('visible');
   }
 
   function showEmptyState() {
-    var container = document.getElementById('cardsContainer');
-    container.innerHTML =
+    var track = document.getElementById('carouselTrack');
+    track.innerHTML =
       '<div class="empty-state">' +
       '<div class="empty-state-icon">—</div>' +
       '<p class="empty-state-text">No links configured</p>' +
       '</div>';
+    document.getElementById('carouselPrev').disabled = true;
+    document.getElementById('carouselNext').disabled = true;
   }
 
   function showLoading() {
-    var container = document.getElementById('cardsContainer');
-    container.innerHTML =
+    var track = document.getElementById('carouselTrack');
+    track.innerHTML =
       '<div class="loading-state">' +
       '<div class="loading-spinner"></div>' +
       '</div>';
@@ -276,8 +400,8 @@
     }
 
     var invites = config.invites;
-    var container = document.getElementById('cardsContainer');
-    container.innerHTML = '';
+    var track = document.getElementById('carouselTrack');
+    track.innerHTML = '';
 
     if (!invites || !invites.length) {
       showEmptyState();
@@ -287,17 +411,25 @@
     for (var i = 0; i < invites.length; i++) {
       var card = invites[i];
       if (!card.id || !card.link) continue;
-      container.appendChild(buildCard(card));
+      track.appendChild(buildCard(card));
     }
 
     renderFooter(config.footer);
+    setupDrag();
+    goToSlide(0);
+
+    var prevBtn = document.getElementById('carouselPrev');
+    var nextBtn = document.getElementById('carouselNext');
+
+    prevBtn.addEventListener('click', function () { goToSlide(currentIndex - 1); });
+    nextBtn.addEventListener('click', function () { goToSlide(currentIndex + 1); });
 
     if (params.p) {
       highlightCard(params.p);
     }
 
     if (params.r === 'true') {
-      var target = config.invites.find(function (c) { return c.id === params.p; }) || config.invites[0];
+      var target = (config.invites || []).find(function (c) { return c.id === params.p; }) || (config.invites || [])[0];
       if (target) {
         if (params.p) highlightCard(params.p);
         startRedirect(target);
