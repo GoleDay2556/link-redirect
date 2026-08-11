@@ -17,11 +17,11 @@
       "description": "Server info, leaderboard, and more"
     },
     {
-      "id": "support",
-      "logo": "/images/logo-sqr.png",
-      "name": "**Support** Us",
-      "link": "https://ko-fi.com/lancasters_studios",
-      "description": "Help keep the server running"
+      "id": "smp-community",
+      "logo": "",
+      "name": "<gradient:red:blue>SMP Community",
+      "link": "https://discord.gg/bDHmZcx9SG",
+      "description": "Join SMP community"
     }
   ],
   "footer": {
