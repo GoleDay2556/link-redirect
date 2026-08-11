@@ -165,15 +165,13 @@
       el.appendChild(desc);
     }
 
-    var shortUrl = domain ? (domain + '/?p=' + encodeURIComponent(card.id) + '&r=true') : card.link;
-
     var btn = document.createElement('button');
     btn.className = 'redirect-btn';
     btn.setAttribute('data-url', card.link);
     btn.setAttribute('data-name', card.name);
 
     var span = document.createElement('span');
-    span.textContent = shortUrl;
+    span.textContent = card.link;
     btn.appendChild(span);
 
     var arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -552,9 +550,6 @@
       applyMeta(merged);
     }
 
-    var domain = config.meta && config.meta.domain;
-    if (domain && !/^https?:\/\//i.test(domain)) domain = 'https://' + domain;
-
     var track = document.getElementById('carouselTrack');
     if (!track) return;
     track.innerHTML = '';
@@ -569,7 +564,7 @@
     for (var i = 0; i < invites.length; i++) {
       var card = invites[i];
       if (!card.id || !card.link) continue;
-      var wrapper = buildCard(card, domain);
+      var wrapper = buildCard(card);
       if (singleMode) wrapper.classList.add('single');
       track.appendChild(wrapper);
     }
