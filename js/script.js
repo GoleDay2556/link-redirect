@@ -171,6 +171,7 @@
   function updateArrows() {
     var prev = document.getElementById('carouselPrev');
     var next = document.getElementById('carouselNext');
+    if (!prev || !next) return;
     var count = getCardCount();
     if (count <= 1) {
       prev.disabled = true;
@@ -183,6 +184,7 @@
 
   function updateDots() {
     var dots = document.getElementById('carouselDots');
+    if (!dots) return;
     dots.innerHTML = '';
     var count = getCardCount();
     for (var i = 0; i < count; i++) {
@@ -206,6 +208,7 @@
     currentIndex = index;
 
     var track = document.getElementById('carouselTrack');
+    if (!track) return;
     track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
 
     var cards = getCards();
@@ -220,6 +223,7 @@
   function setupDrag() {
     var viewport = document.getElementById('carouselViewport');
     var track = document.getElementById('carouselTrack');
+    if (!viewport || !track) return;
     var startX = 0;
     var currentX = 0;
     var dragging = false;
@@ -290,13 +294,14 @@
     redirectSecondsLeft = REDIRECT_DELAY;
 
     var banner = document.getElementById('redirectBanner');
+    if (!banner) return;
     var title = document.getElementById('redirectTitle');
     var countdown = document.getElementById('redirectCountdown');
     var bar = document.getElementById('redirectBar');
 
-    title.innerHTML = 'Redirecting to ' + renderMarkdown(card.name);
-    countdown.textContent = REDIRECT_DELAY + 's';
-    bar.style.width = '0%';
+    if (title) title.innerHTML = 'Redirecting to ' + renderMarkdown(card.name);
+    if (countdown) countdown.textContent = REDIRECT_DELAY + 's';
+    if (bar) bar.style.width = '0%';
     banner.classList.add('visible');
 
     updateCountdown();
@@ -334,17 +339,21 @@
 
   function showEmptyState() {
     var track = document.getElementById('carouselTrack');
+    if (!track) return;
     track.innerHTML =
       '<div class="empty-state">' +
       '<div class="empty-state-icon">—</div>' +
       '<p class="empty-state-text">No links configured</p>' +
       '</div>';
-    document.getElementById('carouselPrev').disabled = true;
-    document.getElementById('carouselNext').disabled = true;
+    var prev = document.getElementById('carouselPrev');
+    var next = document.getElementById('carouselNext');
+    if (prev) prev.disabled = true;
+    if (next) next.disabled = true;
   }
 
   function showLoading() {
     var track = document.getElementById('carouselTrack');
+    if (!track) return;
     track.innerHTML =
       '<div class="loading-state">' +
       '<div class="loading-spinner"></div>' +
@@ -353,6 +362,7 @@
 
   function renderFooter(footer) {
     var el = document.getElementById('pageFooter');
+    if (!el) return;
     if (!footer) { el.style.display = 'none'; return; }
 
     var link = document.createElement('a');
@@ -383,18 +393,20 @@
       return;
     }
 
-    if (config.logo) {
-      var logoEl = document.getElementById('pageLogo');
-      logoEl.src = config.logo;
-      logoEl.alt = config.title || '';
-      logoEl.style.display = '';
-      logoEl.onerror = function () { logoEl.style.display = 'none'; };
-    } else {
-      document.getElementById('pageLogo').style.display = 'none';
+    var logoEl = document.getElementById('pageLogo');
+    if (logoEl) {
+      if (config.logo) {
+        logoEl.src = config.logo;
+        logoEl.alt = config.title || '';
+        logoEl.style.display = '';
+        logoEl.onerror = function () { logoEl.style.display = 'none'; };
+      } else {
+        logoEl.style.display = 'none';
+      }
     }
 
-    if (config.title) {
-      var titleEl = document.getElementById('pageTitle');
+    var titleEl = document.getElementById('pageTitle');
+    if (titleEl && config.title) {
       titleEl.innerHTML = config.title.replace(/\*\*(.+?)\*\*/g, '<span class="accent">$1</span>');
       document.title = config.title.replace(/\*\*(.+?)\*\*/g, '$1');
     }
@@ -414,6 +426,7 @@
     }
 
     var track = document.getElementById('carouselTrack');
+    if (!track) return;
     track.innerHTML = '';
 
     if (!invites || !invites.length) {
@@ -433,18 +446,18 @@
     var dots = document.getElementById('carouselDots');
 
     if (singleMode) {
-      wrapper.classList.add('single');
-      dots.classList.add('hidden');
+      if (wrapper) wrapper.classList.add('single');
+      if (dots) dots.classList.add('hidden');
     } else {
-      wrapper.classList.remove('single');
-      dots.classList.remove('hidden');
+      if (wrapper) wrapper.classList.remove('single');
+      if (dots) dots.classList.remove('hidden');
       setupDrag();
       goToSlide(0);
 
       var prevBtn = document.getElementById('carouselPrev');
       var nextBtn = document.getElementById('carouselNext');
-      prevBtn.addEventListener('click', function () { goToSlide(currentIndex - 1); });
-      nextBtn.addEventListener('click', function () { goToSlide(currentIndex + 1); });
+      if (prevBtn) prevBtn.addEventListener('click', function () { goToSlide(currentIndex - 1); });
+      if (nextBtn) nextBtn.addEventListener('click', function () { goToSlide(currentIndex + 1); });
     }
 
     if (params.r === 'true') {
@@ -460,7 +473,7 @@
     showLoading();
 
     var cancelBtn = document.getElementById('redirectCancelBtn');
-    cancelBtn.addEventListener('click', cancelRedirect);
+    if (cancelBtn) cancelBtn.addEventListener('click', cancelRedirect);
 
     fetch(CONFIG_URL)
       .then(function (res) {
