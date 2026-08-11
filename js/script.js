@@ -16,10 +16,10 @@
   function parseParams() {
     var raw = window.location.search.substring(1);
     if (!raw) return;
-    var pairs = raw.split('&');
+    var pairs = raw.replace(/\+/g, ' ').split('&');
     for (var i = 0; i < pairs.length; i++) {
       var kv = pairs[i].split('=');
-      params[decodeURIComponent(kv[0])] = kv.length > 1 ? decodeURIComponent(kv[1]) : '';
+      params[decodeURIComponent(kv[0].trim())] = kv.length > 1 ? decodeURIComponent(kv[1].trim()) : '';
     }
   }
 
@@ -358,10 +358,11 @@
     if (!card || !card.link) return;
     redirectSecondsLeft = REDIRECT_DELAY;
 
-    var wrapper = getWrappers()[currentIndex];
-    if (!wrapper) return;
+    var wrappers = getWrappers();
+    var wrapper = wrappers[currentIndex] || wrappers[0];
+    if (!wrapper) { window.location.href = card.link; return; }
     var pill = wrapper.querySelector('.countdown-pill');
-    if (!pill) return;
+    if (!pill) { window.location.href = card.link; return; }
     var text = pill.querySelector('.countdown-pill-text');
 
     if (text) text.textContent = redirectSecondsLeft + 's';
@@ -381,7 +382,8 @@
   }
 
   function updatePillCountdown() {
-    var wrapper = getWrappers()[currentIndex];
+    var wrappers = getWrappers();
+    var wrapper = wrappers[currentIndex] || wrappers[0];
     if (!wrapper) return;
     var text = wrapper.querySelector('.countdown-pill-text');
     if (text) text.textContent = redirectSecondsLeft + 's';
