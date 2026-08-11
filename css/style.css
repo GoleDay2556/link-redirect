@@ -306,6 +306,23 @@ img {
   color: rgba(255, 255, 255, 0.5);
 }
 
+.carousel-wrapper.single .carousel-arrow {
+  display: none;
+}
+
+.carousel-wrapper.single .carousel-viewport {
+  cursor: default;
+}
+
+.carousel-wrapper.single .invite-card {
+  min-width: 0;
+  flex: 1;
+}
+
+.carousel-dots.hidden {
+  display: none;
+}
+
 .carousel-dots {
   display: flex;
   justify-content: center;

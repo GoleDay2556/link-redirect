@@ -399,7 +399,20 @@
       document.title = config.title.replace(/\*\*(.+?)\*\*/g, '$1');
     }
 
-    var invites = config.invites;
+    var allInvites = config.invites || [];
+    var singleMode = !!params.p;
+    var invites;
+
+    if (singleMode) {
+      invites = allInvites.filter(function (c) { return c.id === params.p; });
+      if (!invites.length) {
+        singleMode = false;
+        invites = allInvites;
+      }
+    } else {
+      invites = allInvites;
+    }
+
     var track = document.getElementById('carouselTrack');
     track.innerHTML = '';
 
@@ -415,23 +428,28 @@
     }
 
     renderFooter(config.footer);
-    setupDrag();
-    goToSlide(0);
 
-    var prevBtn = document.getElementById('carouselPrev');
-    var nextBtn = document.getElementById('carouselNext');
+    var wrapper = document.getElementById('carouselWrapper');
+    var dots = document.getElementById('carouselDots');
 
-    prevBtn.addEventListener('click', function () { goToSlide(currentIndex - 1); });
-    nextBtn.addEventListener('click', function () { goToSlide(currentIndex + 1); });
+    if (singleMode) {
+      wrapper.classList.add('single');
+      dots.classList.add('hidden');
+    } else {
+      wrapper.classList.remove('single');
+      dots.classList.remove('hidden');
+      setupDrag();
+      goToSlide(0);
 
-    if (params.p) {
-      highlightCard(params.p);
+      var prevBtn = document.getElementById('carouselPrev');
+      var nextBtn = document.getElementById('carouselNext');
+      prevBtn.addEventListener('click', function () { goToSlide(currentIndex - 1); });
+      nextBtn.addEventListener('click', function () { goToSlide(currentIndex + 1); });
     }
 
     if (params.r === 'true') {
-      var target = (config.invites || []).find(function (c) { return c.id === params.p; }) || (config.invites || [])[0];
+      var target = invites[0];
       if (target) {
-        if (params.p) highlightCard(params.p);
         startRedirect(target);
       }
     }
