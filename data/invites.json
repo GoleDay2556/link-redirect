@@ -6,7 +6,8 @@
     "description": "Join the SMP community. Community-Focused Minecraft server. Anti Pay-to-Win.",
     "color": "#3A6FFF",
     "image": "/images/logo-big.png",
-    "siteName": "Lancasters SMP"
+    "siteName": "Lancasters SMP",
+    "domain": "link.lancsmp.ru"
   },
   "invites": [
     {
@@ -14,7 +15,8 @@
       "logo": "",
       "name": "<gradient:purple:blue>SMP Community",
       "link": "https://discord.gg/bDHmZcx9SG",
-      "description": "Join SMP community"
+      "description": "Join SMP community",
+      "priority": 10
     }
   ],
   "footer": {

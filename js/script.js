@@ -135,7 +135,7 @@
     return s;
   }
 
-  function buildCard(card) {
+  function buildCard(card, domain) {
     var wrapper = document.createElement('div');
     wrapper.className = 'card-wrapper';
     wrapper.setAttribute('data-id', card.id);
@@ -165,13 +165,15 @@
       el.appendChild(desc);
     }
 
+    var shortUrl = domain ? (domain + '/?p=' + encodeURIComponent(card.id) + '&r=true') : card.link;
+
     var btn = document.createElement('button');
     btn.className = 'redirect-btn';
     btn.setAttribute('data-url', card.link);
     btn.setAttribute('data-name', card.name);
 
     var span = document.createElement('span');
-    span.textContent = card.link;
+    span.textContent = shortUrl;
     btn.appendChild(span);
 
     var arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -520,7 +522,9 @@
       document.title = config.title.replace(/\*\*(.+?)\*\*/g, '$1');
     }
 
-    var allInvites = config.invites || [];
+    var allInvites = (config.invites || []).slice().sort(function (a, b) {
+      return (b.priority || 0) - (a.priority || 0);
+    });
     var singleMode = !!params.p;
     var invites;
 
@@ -533,6 +537,21 @@
     } else {
       invites = allInvites;
     }
+
+    if (singleMode && invites[0]) {
+      var c = invites[0];
+      var cardMeta = {
+        title: (c.name || '').replace(/<[^>]+>/g, '').replace(/\*\*/g, '') + ' — ' + ((config.meta && config.meta.siteName) || ''),
+        description: c.description || (config.meta && config.meta.description) || '',
+        color: config.meta && config.meta.color,
+        image: c.logo || (config.meta && config.meta.image),
+        siteName: config.meta && config.meta.siteName
+      };
+      applyMeta(cardMeta);
+    }
+
+    var domain = config.meta && config.meta.domain;
+    if (domain && !/^https?:\/\//i.test(domain)) domain = 'https://' + domain;
 
     var track = document.getElementById('carouselTrack');
     if (!track) return;
@@ -548,7 +567,7 @@
     for (var i = 0; i < invites.length; i++) {
       var card = invites[i];
       if (!card.id || !card.link) continue;
-      var wrapper = buildCard(card);
+      var wrapper = buildCard(card, domain);
       if (singleMode) wrapper.classList.add('single');
       track.appendChild(wrapper);
     }
