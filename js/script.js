@@ -3,12 +3,15 @@
 
   var CONFIG_URL = 'data/invites.json';
   var REDIRECT_DELAY = 3;
+  var CARD_WIDTH = 20; // rem
+  var CARD_GAP = 0.75; // rem
 
   var params = {};
   var config = null;
   var currentIndex = 0;
   var redirectTimer = null;
   var redirectSecondsLeft = 0;
+  var rootFontSize = 16;
 
   function parseParams() {
     var raw = window.location.search.substring(1);
@@ -18,6 +21,10 @@
       var kv = pairs[i].split('=');
       params[decodeURIComponent(kv[0])] = kv.length > 1 ? decodeURIComponent(kv[1]) : '';
     }
+  }
+
+  function pxPerRem() {
+    return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
   }
 
   function esc(str) {
@@ -102,6 +109,10 @@
   }
 
   function buildCard(card) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'card-wrapper';
+    wrapper.setAttribute('data-id', card.id);
+
     var el = document.createElement('div');
     el.className = 'invite-card';
     el.setAttribute('data-id', card.id);
@@ -137,8 +148,8 @@
     btn.appendChild(span);
 
     var arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    arrow.setAttribute('width', '16');
-    arrow.setAttribute('height', '16');
+    arrow.setAttribute('width', '18');
+    arrow.setAttribute('height', '18');
     arrow.setAttribute('viewBox', '0 0 24 24');
     arrow.setAttribute('fill', 'none');
     arrow.setAttribute('stroke', 'currentColor');
@@ -157,15 +168,57 @@
     });
 
     el.appendChild(btn);
-    return el;
+
+    var pill = document.createElement('div');
+    pill.className = 'countdown-pill';
+
+    var spinner = document.createElement('div');
+    spinner.className = 'countdown-pill-spinner';
+    pill.appendChild(spinner);
+
+    var pillText = document.createElement('span');
+    pillText.className = 'countdown-pill-text';
+    pill.appendChild(pillText);
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.className = 'countdown-pill-cancel';
+    cancelBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    cancelBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cancelRedirect();
+    });
+    pill.appendChild(cancelBtn);
+
+    el.appendChild(pill);
+    wrapper.appendChild(el);
+    return wrapper;
   }
 
-  function getCards() {
-    return document.querySelectorAll('.carousel-track .invite-card');
+  function getWrappers() {
+    return document.querySelectorAll('.carousel-track .card-wrapper');
   }
 
   function getCardCount() {
-    return getCards().length;
+    return getWrappers().length;
+  }
+
+  function getStepPx() {
+    rootFontSize = pxPerRem();
+    return (CARD_WIDTH + CARD_GAP) * rootFontSize;
+  }
+
+  function updateFade() {
+    var wrappers = getWrappers();
+    for (var i = 0; i < wrappers.length; i++) {
+      var dist = Math.abs(i - currentIndex);
+      wrappers[i].classList.remove('active', 'nearby');
+      if (dist === 0) {
+        wrappers[i].classList.add('active');
+      } else if (dist === 1) {
+        wrappers[i].classList.add('nearby');
+      }
+    }
   }
 
   function updateArrows() {
@@ -209,13 +262,9 @@
 
     var track = document.getElementById('carouselTrack');
     if (!track) return;
-    track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+    track.style.transform = 'translateX(-' + (currentIndex * getStepPx()) + 'px)';
 
-    var cards = getCards();
-    for (var i = 0; i < cards.length; i++) {
-      cards[i].classList.toggle('highlight', i === currentIndex && cards[i].getAttribute('data-id') === params.p);
-    }
-
+    updateFade();
     updateArrows();
     updateDots();
   }
@@ -244,8 +293,8 @@
       if (!dragging) return;
       currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
       dragOffset = currentX - startX;
-      var percentOffset = (dragOffset / viewport.offsetWidth) * 100;
-      track.style.transform = 'translateX(' + (-(currentIndex * 100) + percentOffset) + '%)';
+      var offset = -(currentIndex * getStepPx()) + dragOffset;
+      track.style.transform = 'translateX(' + offset + 'px)';
     }
 
     function onEnd() {
@@ -254,7 +303,7 @@
       viewport.classList.remove('dragging');
       track.classList.remove('no-transition');
 
-      var threshold = viewport.offsetWidth * 0.2;
+      var threshold = viewport.offsetWidth * 0.15;
       if (Math.abs(dragOffset) > threshold) {
         if (dragOffset < 0) {
           goToSlide(currentIndex + 1);
@@ -278,33 +327,20 @@
     window.addEventListener('touchend', onEnd);
   }
 
-  function highlightCard(cardId) {
-    var cards = getCards();
-    for (var i = 0; i < cards.length; i++) {
-      if (cards[i].getAttribute('data-id') === cardId) {
-        goToSlide(i);
-        cards[i].classList.add('highlight');
-        return;
-      }
-    }
-  }
-
   function startRedirect(card) {
     if (!card || !card.link) return;
     redirectSecondsLeft = REDIRECT_DELAY;
 
-    var banner = document.getElementById('redirectBanner');
-    if (!banner) return;
-    var title = document.getElementById('redirectTitle');
-    var countdown = document.getElementById('redirectCountdown');
-    var bar = document.getElementById('redirectBar');
+    var wrapper = getWrappers()[currentIndex];
+    if (!wrapper) return;
+    var pill = wrapper.querySelector('.countdown-pill');
+    if (!pill) return;
+    var text = pill.querySelector('.countdown-pill-text');
 
-    if (title) title.innerHTML = 'Redirecting to ' + renderMarkdown(card.name);
-    if (countdown) countdown.textContent = REDIRECT_DELAY + 's';
-    if (bar) bar.style.width = '0%';
-    banner.classList.add('visible');
+    if (text) text.textContent = redirectSecondsLeft + 's';
+    pill.classList.add('visible');
 
-    updateCountdown();
+    updatePillCountdown();
     redirectTimer = setInterval(function () {
       redirectSecondsLeft--;
       if (redirectSecondsLeft <= 0) {
@@ -313,18 +349,15 @@
         window.location.href = card.link;
         return;
       }
-      updateCountdown();
+      updatePillCountdown();
     }, 1000);
   }
 
-  function updateCountdown() {
-    var countdown = document.getElementById('redirectCountdown');
-    var bar = document.getElementById('redirectBar');
-    if (countdown) countdown.textContent = redirectSecondsLeft + 's';
-    if (bar) {
-      var pct = ((REDIRECT_DELAY - redirectSecondsLeft) / REDIRECT_DELAY) * 100;
-      bar.style.width = pct + '%';
-    }
+  function updatePillCountdown() {
+    var wrapper = getWrappers()[currentIndex];
+    if (!wrapper) return;
+    var text = wrapper.querySelector('.countdown-pill-text');
+    if (text) text.textContent = redirectSecondsLeft + 's';
   }
 
   function cancelRedirect() {
@@ -333,15 +366,18 @@
       redirectTimer = null;
     }
     redirectSecondsLeft = 0;
-    var banner = document.getElementById('redirectBanner');
-    if (banner) banner.classList.remove('visible');
+    var wrappers = getWrappers();
+    for (var i = 0; i < wrappers.length; i++) {
+      var pill = wrappers[i].querySelector('.countdown-pill');
+      if (pill) pill.classList.remove('visible');
+    }
   }
 
   function showEmptyState() {
     var track = document.getElementById('carouselTrack');
     if (!track) return;
     track.innerHTML =
-      '<div class="empty-state">' +
+      '<div class="empty-state" style="flex:1">' +
       '<div class="empty-state-icon">—</div>' +
       '<p class="empty-state-text">No links configured</p>' +
       '</div>';
@@ -349,6 +385,7 @@
     var next = document.getElementById('carouselNext');
     if (prev) prev.disabled = true;
     if (next) next.disabled = true;
+    document.getElementById('carouselDots').innerHTML = '';
   }
 
   function showLoading() {
@@ -434,10 +471,14 @@
       return;
     }
 
+    rootFontSize = pxPerRem();
+
     for (var i = 0; i < invites.length; i++) {
       var card = invites[i];
       if (!card.id || !card.link) continue;
-      track.appendChild(buildCard(card));
+      var wrapper = buildCard(card);
+      if (singleMode) wrapper.classList.add('single');
+      track.appendChild(wrapper);
     }
 
     renderFooter(config.footer);
@@ -448,6 +489,8 @@
     if (singleMode) {
       if (wrapper) wrapper.classList.add('single');
       if (dots) dots.classList.add('hidden');
+      if (track) track.style.padding = '0';
+      updateFade();
     } else {
       if (wrapper) wrapper.classList.remove('single');
       if (dots) dots.classList.remove('hidden');
@@ -471,9 +514,6 @@
   function init() {
     parseParams();
     showLoading();
-
-    var cancelBtn = document.getElementById('redirectCancelBtn');
-    if (cancelBtn) cancelBtn.addEventListener('click', cancelRedirect);
 
     fetch(CONFIG_URL)
       .then(function (res) {
