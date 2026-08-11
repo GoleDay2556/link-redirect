@@ -3,8 +3,8 @@
 
   var CONFIG_URL = 'data/invites.json';
   var REDIRECT_DELAY = 3;
-  var CARD_WIDTH = 20; // rem
-  var CARD_GAP = 0.75; // rem
+  var CARD_WIDTH = 27; // rem
+  var CARD_GAP = 1; // rem
 
   var params = {};
   var config = null;
