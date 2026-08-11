@@ -488,6 +488,14 @@ img {
   color: #fff;
 }
 
+.ct-gradient {
+  background: var(--ct-grad, linear-gradient(90deg, var(--blue), var(--gold)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
 .empty-state {
   min-width: 100%;
   text-align: center;

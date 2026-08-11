@@ -50,9 +50,22 @@
       return null;
     }
 
+    function parseGradient(token) {
+      var match = token.match(/^gradient:(.+)$/i);
+      if (!match) return null;
+      var colors = match[1].split(':').filter(Boolean);
+      if (colors.length < 2) return null;
+      var stops = colors.map(function (c, idx) {
+        var color = resolveColor(c) || c;
+        return color + ' ' + (idx / (colors.length - 1) * 100) + '%';
+      });
+      return 'linear-gradient(90deg, ' + stops.join(', ') + ')';
+    }
+
     function tagName(tag) {
       tag = tag.toLowerCase().replace(/^\/?/, '');
       if (tag === 'color' || tag === 'colour') return 'color';
+      if (tag === 'gradient') return 'gradient';
       return tag.replace(/^colou?r=/, 'color=');
     }
 
@@ -68,7 +81,7 @@
     var i = 0;
     var stack = [];
     while (i < s.length) {
-      var tagMatch = s.slice(i).match(/^<(?:(\/?(?:colou?r=(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]\w*)|#[0-9a-fA-F]{3,8}|[a-zA-Z]\w*)|\/?reset))>/i);
+      var tagMatch = s.slice(i).match(/^<(?:(\/?(?:colou?r=(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]\w*)|#[0-9a-fA-F]{3,8}|[a-zA-Z]\w*|gradient:[^>]+)|\/?reset))>/i);
       if (tagMatch) {
         var tag = tagMatch[1];
         i += tagMatch[0].length;
@@ -78,7 +91,7 @@
           var closing = tagName(tag.slice(1));
           for (var j = stack.length - 1; j >= 0; j--) {
             var sj = stack[j].name;
-            if (sj === closing || (closing === 'color' && /^color=/.test(sj))) {
+            if (sj === closing || (closing === 'color' && /^color=/.test(sj)) || (closing === 'gradient' && /^gradient:/.test(sj))) {
               tmp += '</span>';
               stack.splice(j, 1);
               break;
@@ -90,7 +103,13 @@
             tmp += '<span style="color:' + color + '">';
             stack.push({ name: tagName(tag), close: '</span>' });
           } else {
-            tmp += esc(tagMatch[0]);
+            var gradient = parseGradient(tag);
+            if (gradient) {
+              tmp += '<span class="ct-gradient" style="--ct-grad:' + gradient + '">';
+              stack.push({ name: tagName(tag), close: '</span>' });
+            } else {
+              tmp += esc(tagMatch[0]);
+            }
           }
         }
       } else {
@@ -172,7 +191,7 @@
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      window.open(card.link, '_blank', 'noopener,noreferrer');
+      window.location.href = card.link;
     });
 
     el.appendChild(btn);
