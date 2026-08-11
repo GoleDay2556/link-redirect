@@ -1,12 +1,12 @@
 {
-  "title": "SMP Community — Invites",
+  "title": "Invite",
   "logo": "",
   "meta": {
-    "title": "SMP Community — Lancasters Studios",
-    "description": "Join the SMP community. Community-Focused Minecraft server. Anti Pay-to-Win.",
+    "title": "Invite",
+    "description": "You've been invited!",
     "color": "#3A6FFF",
     "image": "/images/logo-big.png",
-    "siteName": "Lancasters SMP",
+    "siteName": "Invite Page",
     "domain": "link.lancsmp.ru"
   },
   "invites": [
@@ -19,14 +19,14 @@
       "priority": 10,
       "meta": {
         "title": "Join SMP Community on Discord",
-        "description": "Click to join our SMP community Discord server!",
+        "description": "Click to join SMP community Discord server",
         "image": "/images/logo-big.png"
       }
     }
   ],
   "footer": {
     "logo": "/images/logo-sqr.png",
-    "text": "Powered by **<blue>Lancasters <yellow>Studios**",
+    "text": "Powered by **Lancasters Studios**",
     "link": "https://www.lancsmp.ru"
   }
 }
