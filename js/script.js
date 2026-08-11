@@ -540,14 +540,16 @@
 
     if (singleMode && invites[0]) {
       var c = invites[0];
-      var cardMeta = {
-        title: (c.name || '').replace(/<[^>]+>/g, '').replace(/\*\*/g, '') + ' — ' + ((config.meta && config.meta.siteName) || ''),
-        description: c.description || (config.meta && config.meta.description) || '',
-        color: config.meta && config.meta.color,
-        image: c.logo || (config.meta && config.meta.image),
-        siteName: config.meta && config.meta.siteName
+      var globalMeta = config.meta || {};
+      var cardMeta = c.meta || {};
+      var merged = {
+        title: cardMeta.title || globalMeta.title || '',
+        description: cardMeta.description || globalMeta.description || '',
+        color: cardMeta.color || globalMeta.color || '',
+        image: cardMeta.image || globalMeta.image || '',
+        siteName: cardMeta.siteName || globalMeta.siteName || ''
       };
-      applyMeta(cardMeta);
+      applyMeta(merged);
     }
 
     var domain = config.meta && config.meta.domain;

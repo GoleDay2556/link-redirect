@@ -16,7 +16,12 @@
       "name": "<gradient:purple:blue>SMP Community",
       "link": "https://discord.gg/bDHmZcx9SG",
       "description": "Join SMP community",
-      "priority": 10
+      "priority": 10,
+      "meta": {
+        "title": "Join SMP Community on Discord",
+        "description": "Click to join our SMP community Discord server!",
+        "image": "/images/logo-big.png"
+      }
     }
   ],
   "footer": {
