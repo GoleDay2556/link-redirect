@@ -19,45 +19,14 @@
       "link": "https://discord.gg/bDHmZcx9SG",
       "description": "Join SMP community",
       "label": "Join Discord",
-      "mode": "public",
+      "mode": "link-only",
       "priority": 10,
       "meta": {
         "title": "Join SMP Community on Discord",
         "description": "Click to join SMP community Discord server",
         "image": "/images/logo-big.png"
       }
-    },
-    {
-      "id": "website",
-      "logo": "",
-      "preview": "",
-      "name": "<gradient:blue:cyan>Lancasters SMP",
-      "link": "https://www.lancsmp.ru",
-      "description": "Visit the official website",
-      "label": "Visit Site",
-      "mode": "link-only",
-      "priority": 8,
-      "meta": {
-        "title": "Lancasters SMP — Official Website",
-        "description": "Visit the Lancasters SMP website",
-        "image": "/images/logo-big.png"
-      }
-    },
-    {
-      "id": "auto-join",
-      "logo": "",
-      "preview": "",
-      "name": "<gradient:green:teal>Auto-Join",
-      "link": "https://discord.gg/bDHmZcx9SG",
-      "description": "You will be redirected automatically",
-      "label": "Join Now",
-      "mode": "redirect",
-      "priority": 5,
-      "meta": {
-        "title": "Auto-Join SMP Community",
-        "description": "You will be redirected to the Discord server",
-        "image": "/images/logo-big.png"
-      }
+    }
     }
   ],
   "footer": {
