@@ -82,6 +82,46 @@ img {
   background: linear-gradient(to bottom, rgba(10, 13, 24, 0.7), rgba(10, 13, 24, 0.4), rgba(10, 13, 24, 0.85));
 }
 
+.bg-overlay::before,
+.bg-overlay::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.bg-overlay::before {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--blue) 0%, transparent 70%);
+  top: -200px;
+  right: -100px;
+  animation: orbFloat1 12s ease-in-out infinite;
+}
+
+.bg-overlay::after {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #a855f7 0%, transparent 70%);
+  bottom: -150px;
+  left: -100px;
+  animation: orbFloat2 15s ease-in-out infinite;
+}
+
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-60px, 40px) scale(1.15); }
+  66% { transform: translate(30px, -20px) scale(0.9); }
+}
+
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, -30px) scale(1.1); }
+  66% { transform: translate(-40px, 20px) scale(0.85); }
+}
+
 .page {
   position: relative;
   min-height: 100vh;
@@ -115,10 +155,17 @@ img {
   font-weight: 800;
   font-size: 1.5rem;
   letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .page-title .accent {
-  color: var(--blue);
+  background: linear-gradient(135deg, var(--blue) 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .carousel-wrapper {
@@ -181,6 +228,20 @@ img {
   transform: scale(1);
 }
 
+.card-wrapper:not(.single):hover .invite-card {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-glow), 0 8px 30px rgba(58, 111, 255, 0.1);
+}
+
+.card-wrapper.active .invite-card {
+  border-color: rgba(58, 111, 255, 0.25);
+  box-shadow: var(--shadow-glow);
+}
+
+.card-wrapper.single .invite-card {
+  box-shadow: var(--shadow-glow);
+}
+
 .invite-card {
   position: relative;
   padding: 2.25rem 1.75rem 2rem;
@@ -194,6 +255,9 @@ img {
   align-items: center;
   text-align: center;
   height: 100%;
+  transition: transform var(--anim-base) var(--anim-ease),
+              border-color var(--anim-base) var(--anim-ease),
+              box-shadow var(--anim-base) var(--anim-ease);
 }
 
 .invite-card.highlight {
@@ -239,7 +303,7 @@ img {
   width: 100%;
   padding: 0.875rem 1.125rem;
   border-radius: var(--radius-xl);
-  background: #0d1018;
+  background: linear-gradient(135deg, rgba(13, 16, 24, 0.95), rgba(20, 24, 38, 0.9));
   border: 1px solid rgba(34, 197, 94, 0.45);
   cursor: pointer;
   position: relative;
@@ -248,7 +312,7 @@ img {
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.9375rem;
-  transition: border-color var(--transition-default), box-shadow var(--transition-default);
+  transition: border-color var(--transition-default), box-shadow var(--transition-default), transform var(--anim-fast) var(--anim-ease);
 }
 
 .redirect-btn::after {
@@ -270,6 +334,7 @@ img {
 .redirect-btn:hover {
   border-color: #22c55e;
   box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+  transform: translateY(-1px);
 }
 
 .redirect-btn:hover::after {
@@ -422,6 +487,16 @@ img {
   padding: 0;
 }
 
+.carousel-wrapper:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 4px;
+  border-radius: var(--radius-xl);
+}
+
+.carousel-wrapper:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .carousel-dots.hidden {
   display: none;
 }
@@ -500,7 +575,7 @@ img {
 .empty-state {
   min-width: 100%;
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 4rem 2rem;
   color: var(--text-muted);
   border-radius: var(--radius-2xl);
   background: var(--bg-card);
@@ -510,9 +585,13 @@ img {
 }
 
 .empty-state-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.3;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  opacity: 0.25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .empty-state-text {

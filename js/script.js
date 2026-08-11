@@ -33,6 +33,17 @@
     return d.innerHTML;
   }
 
+  function isSafeUrl(url) {
+    if (!url) return false;
+    return /^(https?:|mailto:|[\/#])/i.test(url);
+  }
+
+  function redirectTo(url) {
+    if (isSafeUrl(url)) {
+      window.location.href = url;
+    }
+  }
+
   function renderMarkdown(text) {
     if (!text) return '';
 
@@ -135,7 +146,7 @@
     return s;
   }
 
-  function buildCard(card, domain) {
+  function buildCard(card) {
     var wrapper = document.createElement('div');
     wrapper.className = 'card-wrapper';
     wrapper.setAttribute('data-id', card.id);
@@ -149,6 +160,7 @@
       logo.className = 'card-logo';
       logo.src = card.logo;
       logo.alt = '';
+      logo.loading = 'lazy';
       logo.onerror = function () { logo.style.display = 'none'; };
       el.appendChild(logo);
     }
@@ -191,7 +203,8 @@
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      window.location.href = card.link;
+      cancelRedirect();
+      redirectTo(card.link);
     });
 
     el.appendChild(btn);
@@ -360,9 +373,9 @@
 
     var wrappers = getWrappers();
     var wrapper = wrappers[currentIndex] || wrappers[0];
-    if (!wrapper) { window.location.href = card.link; return; }
+    if (!wrapper) { redirectTo(card.link); return; }
     var pill = wrapper.querySelector('.countdown-pill');
-    if (!pill) { window.location.href = card.link; return; }
+    if (!pill) { redirectTo(card.link); return; }
     var text = pill.querySelector('.countdown-pill-text');
 
     if (text) text.textContent = redirectSecondsLeft + 's';
@@ -374,7 +387,7 @@
       if (redirectSecondsLeft <= 0) {
         clearInterval(redirectTimer);
         redirectTimer = null;
-        window.location.href = card.link;
+        redirectTo(card.link);
         return;
       }
       updatePillCountdown();
@@ -407,7 +420,9 @@
     if (!track) return;
     track.innerHTML =
       '<div class="empty-state" style="flex:1">' +
-      '<div class="empty-state-icon">—</div>' +
+      '<div class="empty-state-icon">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>' +
+      '</div>' +
       '<p class="empty-state-text">No links configured</p>' +
       '</div>';
     var prev = document.getElementById('carouselPrev');
@@ -492,6 +507,22 @@
     if (el.hasAttribute('content')) {
       el.setAttribute('content', value);
     }
+  }
+
+  function setupKeyboard() {
+    var wrapper = document.getElementById('carouselWrapper');
+    if (!wrapper) return;
+
+    document.addEventListener('keydown', function (e) {
+      if (document.activeElement !== wrapper && !wrapper.contains(document.activeElement)) return;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToSlide(currentIndex - 1);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToSlide(currentIndex + 1);
+      }
+    });
   }
 
   function render() {
@@ -580,9 +611,13 @@
       if (track) track.style.padding = '0';
       updateFade();
     } else {
-      if (wrapper) wrapper.classList.remove('single');
+      if (wrapper) {
+        wrapper.classList.remove('single');
+        wrapper.setAttribute('tabindex', '0');
+      }
       if (dots) dots.classList.remove('hidden');
       setupDrag();
+      setupKeyboard();
       goToSlide(0);
 
       var prevBtn = document.getElementById('carouselPrev');
@@ -591,12 +626,29 @@
       if (nextBtn) nextBtn.addEventListener('click', function () { goToSlide(currentIndex + 1); });
     }
 
-    if (params.r === 'true') {
+    if (params.r === 'true' && singleMode) {
       var target = invites[0];
       if (target) {
         startRedirect(target);
       }
     }
+
+    if (params.p || params.r) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
+  function validateConfig(data) {
+    if (!data || typeof data !== 'object') return false;
+    if (data.invites && !Array.isArray(data.invites)) return false;
+    if (data.invites) {
+      for (var i = 0; i < data.invites.length; i++) {
+        var inv = data.invites[i];
+        if (!inv.id || !inv.link) return false;
+        if (!isSafeUrl(inv.link)) return false;
+      }
+    }
+    return true;
   }
 
   function init() {
@@ -609,6 +661,7 @@
         return res.json();
       })
       .then(function (data) {
+        if (!validateConfig(data)) throw new Error('Invalid config structure');
         config = data;
         render();
       })
