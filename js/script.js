@@ -12,6 +12,7 @@
   var redirectTimer = null;
   var redirectSecondsLeft = 0;
   var rootFontSize = 16;
+  var enteringCards = [];
 
   function parseParams() {
     var raw = window.location.search.substring(1);
@@ -42,6 +43,15 @@
     if (isSafeUrl(url)) {
       window.location.href = url;
     }
+  }
+
+  function normalizeUrlForDisplay(url) {
+    if (!url) return '';
+    var cleaned = url.replace(/^https?:\/\//i, '');
+    if (cleaned.length > 40) {
+      cleaned = cleaned.substring(0, 38) + '\u2026';
+    }
+    return cleaned;
   }
 
   function renderMarkdown(text) {
@@ -77,7 +87,9 @@
       tag = tag.toLowerCase().replace(/^\/?/, '');
       if (tag === 'color' || tag === 'colour') return 'color';
       if (tag === 'gradient') return 'gradient';
-      return tag.replace(/^colou?r=/, 'color=');
+      if (/^colou?r=/.test(tag)) return 'color';
+      if (/^gradient:/.test(tag)) return 'gradient';
+      return tag;
     }
 
     var codes = [];
@@ -102,7 +114,8 @@
           var closing = tagName(tag.slice(1));
           for (var j = stack.length - 1; j >= 0; j--) {
             var sj = stack[j].name;
-            if (sj === closing || (closing === 'color' && /^color=/.test(sj)) || (closing === 'gradient' && /^gradient:/.test(sj))) {
+            var sjT = tagName(sj);
+            if (sjT === closing) {
               tmp += '</span>';
               stack.splice(j, 1);
               break;
@@ -112,12 +125,12 @@
           var color = resolveColor(tag);
           if (color) {
             tmp += '<span style="color:' + color + '">';
-            stack.push({ name: tagName(tag), close: '</span>' });
+            stack.push({ name: tag, close: '</span>' });
           } else {
             var gradient = parseGradient(tag);
             if (gradient) {
               tmp += '<span class="ct-gradient" style="--ct-grad:' + gradient + '">';
-              stack.push({ name: tagName(tag), close: '</span>' });
+              stack.push({ name: tag, close: '</span>' });
             } else {
               tmp += esc(tagMatch[0]);
             }
@@ -192,9 +205,15 @@
     btn.setAttribute('data-url', card.link);
     btn.setAttribute('data-name', card.name);
 
-    var span = document.createElement('span');
-    span.textContent = card.link;
-    btn.appendChild(span);
+    var label = document.createElement('span');
+    label.className = 'redirect-btn-label';
+    label.textContent = card.label || 'Join';
+    btn.appendChild(label);
+
+    var urlText = document.createElement('span');
+    urlText.className = 'redirect-btn-url';
+    urlText.textContent = normalizeUrlForDisplay(card.link);
+    btn.appendChild(urlText);
 
     var arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     arrow.setAttribute('width', '18');
@@ -233,6 +252,7 @@
     var cancelBtn = document.createElement('button');
     cancelBtn.className = 'countdown-pill-cancel';
     cancelBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    cancelBtn.setAttribute('aria-label', 'Cancel redirect');
     cancelBtn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -256,6 +276,17 @@
   function getStepPx() {
     rootFontSize = pxPerRem();
     return (CARD_WIDTH + CARD_GAP) * rootFontSize;
+  }
+
+  function calculateTrackPadding() {
+    var viewport = document.getElementById('carouselViewport');
+    var track = document.getElementById('carouselTrack');
+    if (!viewport || !track) return;
+    var cardWidthPx = CARD_WIDTH * pxPerRem();
+    var viewportWidth = viewport.offsetWidth;
+    var padding = Math.max(0, (viewportWidth - cardWidthPx) / 2);
+    track.style.paddingLeft = padding + 'px';
+    track.style.paddingRight = padding + 'px';
   }
 
   function updateFade() {
@@ -312,7 +343,8 @@
 
     var track = document.getElementById('carouselTrack');
     if (!track) return;
-    track.style.transform = 'translateX(-' + (currentIndex * getStepPx()) + 'px)';
+    var step = getStepPx();
+    track.style.transform = 'translateX(-' + (currentIndex * step) + 'px)';
 
     updateFade();
     updateArrows();
@@ -324,9 +356,12 @@
     var track = document.getElementById('carouselTrack');
     if (!viewport || !track) return;
     var startX = 0;
+    var startY = 0;
     var currentX = 0;
+    var currentY = 0;
     var dragging = false;
     var dragOffset = 0;
+    var isHorizontalDrag = null;
 
     function onStart(e) {
       var count = getCardCount();
@@ -335,15 +370,38 @@
       viewport.classList.add('dragging');
       track.classList.add('no-transition');
       startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+      startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
       currentX = startX;
+      currentY = startY;
       dragOffset = 0;
+      isHorizontalDrag = null;
     }
 
     function onMove(e) {
       if (!dragging) return;
       currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-      dragOffset = currentX - startX;
-      var offset = -(currentIndex * getStepPx()) + dragOffset;
+      currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+      var dx = currentX - startX;
+      var dy = currentY - startY;
+
+      if (isHorizontalDrag === null) {
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+          isHorizontalDrag = Math.abs(dx) > Math.abs(dy);
+        }
+        if (isHorizontalDrag === null) return;
+      }
+
+      if (!isHorizontalDrag) {
+        dragging = false;
+        viewport.classList.remove('dragging');
+        track.classList.remove('no-transition');
+        return;
+      }
+
+      dragOffset = dx;
+      var step = getStepPx();
+      var offset = -(currentIndex * step) + dragOffset;
       track.style.transform = 'translateX(' + offset + 'px)';
     }
 
@@ -391,7 +449,6 @@
     if (text) text.textContent = redirectSecondsLeft + 's';
     pill.classList.add('visible');
 
-    updatePillCountdown();
     redirectTimer = setInterval(function () {
       redirectSecondsLeft--;
       if (redirectSecondsLeft <= 0) {
@@ -431,15 +488,35 @@
     track.innerHTML =
       '<div class="empty-state" style="flex:1">' +
       '<div class="empty-state-icon">' +
-      '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>' +
       '</div>' +
       '<p class="empty-state-text">No links configured</p>' +
+      '<p class="empty-state-hint">Add invite links to data/invites.json</p>' +
       '</div>';
+    disableNav();
+  }
+
+  function showErrorState(message) {
+    var track = document.getElementById('carouselTrack');
+    if (!track) return;
+    track.innerHTML =
+      '<div class="error-state" style="flex:1">' +
+      '<div class="error-state-icon">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+      '</div>' +
+      '<p class="error-state-text">Failed to load invites</p>' +
+      '<p class="empty-state-hint">' + esc(message) + '</p>' +
+      '</div>';
+    disableNav();
+  }
+
+  function disableNav() {
     var prev = document.getElementById('carouselPrev');
     var next = document.getElementById('carouselNext');
     if (prev) prev.disabled = true;
     if (next) next.disabled = true;
-    document.getElementById('carouselDots').innerHTML = '';
+    var dots = document.getElementById('carouselDots');
+    if (dots) dots.innerHTML = '';
   }
 
   function showLoading() {
@@ -448,12 +525,33 @@
     track.innerHTML =
       '<div class="loading-state">' +
       '<div class="loading-spinner"></div>' +
+      '<span class="loading-text">Loading invites\u2026</span>' +
       '</div>';
+  }
+
+  function animateCardsEntrance() {
+    var wrappers = getWrappers();
+    if (!wrappers.length) return;
+
+    for (var i = 0; i < wrappers.length; i++) {
+      wrappers[i].classList.add('card-entering');
+      var delay = 100 + i * 80;
+      setTimeout((function (w) {
+        return function () {
+          w.classList.remove('card-entering');
+          w.classList.add('card-visible');
+          setTimeout(function () {
+            w.classList.remove('card-visible');
+          }, 550);
+        };
+      })(wrappers[i]), delay);
+    }
   }
 
   function renderFooter(footer) {
     var el = document.getElementById('pageFooter');
     if (!el) return;
+    el.innerHTML = '';
     if (!footer) { el.style.display = 'none'; return; }
 
     var link = document.createElement('a');
@@ -524,7 +622,6 @@
     if (!wrapper) return;
 
     document.addEventListener('keydown', function (e) {
-      if (document.activeElement !== wrapper && !wrapper.contains(document.activeElement)) return;
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
         goToSlide(currentIndex - 1);
@@ -533,6 +630,12 @@
         goToSlide(currentIndex + 1);
       }
     });
+  }
+
+  function cleanUrl() {
+    var cleanPath = params.p ? '/' + encodeURIComponent(params.p) : '/';
+    var cleanSearch = params.r === 'true' ? '?r=true' : '';
+    window.history.replaceState(null, '', cleanPath + cleanSearch);
   }
 
   function render() {
@@ -618,7 +721,7 @@
     if (singleMode) {
       if (wrapper) wrapper.classList.add('single');
       if (dots) dots.classList.add('hidden');
-      if (track) track.style.padding = '0';
+      track.style.padding = '0';
       updateFade();
     } else {
       if (wrapper) {
@@ -626,6 +729,7 @@
         wrapper.setAttribute('tabindex', '0');
       }
       if (dots) dots.classList.remove('hidden');
+      calculateTrackPadding();
       setupDrag();
       setupKeyboard();
       goToSlide(0);
@@ -636,6 +740,10 @@
       if (nextBtn) nextBtn.addEventListener('click', function () { goToSlide(currentIndex + 1); });
     }
 
+    if (!singleMode) {
+      animateCardsEntrance();
+    }
+
     if (params.r === 'true' && singleMode) {
       var target = invites[0];
       if (target) {
@@ -643,10 +751,15 @@
       }
     }
 
+    window.addEventListener('resize', function () {
+      if (!singleMode) {
+        calculateTrackPadding();
+        goToSlide(currentIndex);
+      }
+    });
+
     if (params.p || params.r) {
-      var cleanPath = params.p ? '/' + params.p : '/';
-      var cleanSearch = params.r === 'true' ? '?r=true' : '';
-      window.history.replaceState(null, '', cleanPath + cleanSearch);
+      cleanUrl();
     }
   }
 
@@ -669,7 +782,7 @@
 
     fetch(CONFIG_URL)
       .then(function (res) {
-        if (!res.ok) throw new Error('Failed to load config');
+        if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + res.statusText);
         return res.json();
       })
       .then(function (data) {
@@ -679,7 +792,7 @@
       })
       .catch(function (err) {
         console.error('Failed to load invites config:', err);
-        showEmptyState();
+        showErrorState(err.message || 'Could not load configuration');
       });
   }
 
