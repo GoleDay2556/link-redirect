@@ -416,6 +416,7 @@ img {
   gap: 1rem;
   padding: 1.125rem 1.5rem;
   text-align: left;
+  height: auto;
 }
 
 .invite-card.compact .card-logo {
