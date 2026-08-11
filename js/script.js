@@ -3,7 +3,7 @@
 
   var CONFIG_URL = 'data/invites.json';
   var REDIRECT_DELAY = 3;
-  var CARD_WIDTH = 27; // rem
+  var CARD_WIDTH = 32; // rem
   var CARD_GAP = 1; // rem
 
   var params = {};
@@ -154,6 +154,16 @@
     var el = document.createElement('div');
     el.className = 'invite-card';
     el.setAttribute('data-id', card.id);
+
+    if (card.preview) {
+      var preview = document.createElement('img');
+      preview.className = 'card-preview';
+      preview.src = card.preview;
+      preview.alt = '';
+      preview.loading = 'lazy';
+      preview.onerror = function () { preview.style.display = 'none'; };
+      el.appendChild(preview);
+    }
 
     if (card.logo) {
       var logo = document.createElement('img');
@@ -634,7 +644,9 @@
     }
 
     if (params.p || params.r) {
-      window.history.replaceState(null, '', window.location.pathname);
+      var cleanPath = params.p ? '/' + params.p : '/';
+      var cleanSearch = params.r === 'true' ? '?r=true' : '';
+      window.history.replaceState(null, '', cleanPath + cleanSearch);
     }
   }
 

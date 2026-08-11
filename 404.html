@@ -6,8 +6,13 @@
   <script>
     (function () {
       var path = window.location.pathname.replace(/\/+$/, '').replace(/^\//, '');
+      var search = window.location.search;
       if (path && path !== '404.html') {
-        window.location.replace('/?p=' + encodeURIComponent(path) + '&r=true');
+        var url = '/?p=' + encodeURIComponent(path);
+        if (search) {
+          url += '&' + search.substring(1);
+        }
+        window.location.replace(url);
       } else {
         window.location.replace('/');
       }
