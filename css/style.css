@@ -280,7 +280,6 @@ img {
   opacity: 0.3;
   transform: scale(0.88);
   filter: blur(1px);
-  position: relative;
 }
 
 .card-wrapper.compact-card {
@@ -293,6 +292,7 @@ img {
   opacity: 1;
   transform: scale(1);
   filter: blur(0);
+  position: relative;
 }
 
 .card-wrapper.nearby {
@@ -324,15 +324,6 @@ img {
   transform: translateY(-6px);
   box-shadow: var(--shadow-card-hover);
   border-color: var(--border-active);
-}
-
-.card-wrapper:not(.active):not(.nearby):not(.single) {
-  cursor: pointer;
-}
-
-.card-wrapper:not(.active):not(.nearby):not(.single):hover {
-  opacity: 0.65 !important;
-  filter: blur(0.5px) !important;
 }
 
 .card-wrapper.active .invite-card {
@@ -425,7 +416,6 @@ img {
   gap: 1rem;
   padding: 1.125rem 1.5rem;
   text-align: left;
-  justify-content: space-between;
 }
 
 .invite-card.compact .card-logo {
