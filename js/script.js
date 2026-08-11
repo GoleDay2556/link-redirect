@@ -44,9 +44,16 @@
     };
 
     function resolveColor(name) {
+      name = name.toLowerCase().replace(/^colou?r=/, '');
       if (name in namedColors) return namedColors[name];
       if (/^#[0-9a-fA-F]{3,8}$/.test(name)) return name;
       return null;
+    }
+
+    function tagName(tag) {
+      tag = tag.toLowerCase().replace(/^\/?/, '');
+      if (tag === 'color' || tag === 'colour') return 'color';
+      return tag.replace(/^colou?r=/, 'color=');
     }
 
     var codes = [];
@@ -61,16 +68,17 @@
     var i = 0;
     var stack = [];
     while (i < s.length) {
-      var tagMatch = s.slice(i).match(/^<(?:(\/?(?:#[0-9a-fA-F]{3,8}|\w+)|\/?reset))>/);
+      var tagMatch = s.slice(i).match(/^<(?:(\/?(?:colou?r=(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]\w*)|#[0-9a-fA-F]{3,8}|[a-zA-Z]\w*)|\/?reset))>/i);
       if (tagMatch) {
         var tag = tagMatch[1];
         i += tagMatch[0].length;
         if (tag === 'reset' || tag === '/reset') {
           while (stack.length) tmp += stack.pop().close;
         } else if (tag.charAt(0) === '/') {
-          var closing = tag.slice(1);
+          var closing = tagName(tag.slice(1));
           for (var j = stack.length - 1; j >= 0; j--) {
-            if (stack[j].name === closing) {
+            var sj = stack[j].name;
+            if (sj === closing || (closing === 'color' && /^color=/.test(sj))) {
               tmp += '</span>';
               stack.splice(j, 1);
               break;
@@ -80,7 +88,7 @@
           var color = resolveColor(tag);
           if (color) {
             tmp += '<span style="color:' + color + '">';
-            stack.push({ name: tag, close: '</span>' });
+            stack.push({ name: tagName(tag), close: '</span>' });
           } else {
             tmp += esc(tagMatch[0]);
           }
