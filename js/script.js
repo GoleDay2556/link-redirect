@@ -533,6 +533,11 @@
     var wrappers = getWrappers();
     if (!wrappers.length) return;
 
+    var viewport = document.getElementById('carouselViewport');
+    if (viewport) viewport.classList.add('entering');
+
+    var totalDelay = 100 + (wrappers.length - 1) * 80 + 550;
+
     for (var i = 0; i < wrappers.length; i++) {
       wrappers[i].classList.add('card-entering');
       var delay = 100 + i * 80;
@@ -546,6 +551,10 @@
         };
       })(wrappers[i]), delay);
     }
+
+    setTimeout(function () {
+      if (viewport) viewport.classList.remove('entering');
+    }, totalDelay + 100);
   }
 
   function renderFooter(footer) {
