@@ -5,14 +5,14 @@
     {
       "id": "smp-community",
       "logo": "",
-      "name": "<gradient:red:blue>SMP Community",
+      "name": "<gradient:purple:blue>SMP Community",
       "link": "https://discord.gg/bDHmZcx9SG",
       "description": "Join SMP community"
     }
   ],
   "footer": {
     "logo": "/images/logo-sqr.png",
-    "text": "Powered by **Lancasters Studios**",
+    "text": "Powered by **<blue>Lancasters <yellow>Studios**",
     "link": "https://www.lancsmp.ru"
   }
 }
