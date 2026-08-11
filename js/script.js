@@ -159,16 +159,28 @@
     return s;
   }
 
+  function getCardMode(card) {
+    var cardMode = card.mode;
+    var globalMode = config && config.mode;
+    return cardMode || globalMode || 'public';
+  }
+
   function buildCard(card) {
+    var mode = getCardMode(card);
+    var isCompact = mode === 'link-only' || mode === 'redirect';
+
     var wrapper = document.createElement('div');
     wrapper.className = 'card-wrapper';
+    if (isCompact) wrapper.classList.add('compact-card');
     wrapper.setAttribute('data-id', card.id);
+    if (mode === 'redirect') wrapper.setAttribute('data-redirect', 'true');
 
     var el = document.createElement('div');
     el.className = 'invite-card';
+    if (isCompact) el.classList.add('compact');
     el.setAttribute('data-id', card.id);
 
-    if (card.preview) {
+    if (!isCompact && card.preview) {
       var preview = document.createElement('img');
       preview.className = 'card-preview';
       preview.src = card.preview;
@@ -188,17 +200,22 @@
       el.appendChild(logo);
     }
 
+    var contentWrap = document.createElement('div');
+    contentWrap.className = 'card-content';
+
     var name = document.createElement('div');
     name.className = 'card-name';
     name.innerHTML = renderMarkdown(card.name);
-    el.appendChild(name);
+    contentWrap.appendChild(name);
 
-    if (card.description) {
+    if (!isCompact && card.description) {
       var desc = document.createElement('div');
       desc.className = 'card-desc';
       desc.textContent = card.description;
-      el.appendChild(desc);
+      contentWrap.appendChild(desc);
     }
+
+    el.appendChild(contentWrap);
 
     var btn = document.createElement('button');
     btn.className = 'redirect-btn';
@@ -753,7 +770,7 @@
       animateCardsEntrance();
     }
 
-    if (params.r === 'true' && singleMode) {
+    if (params.r === 'true' || (singleMode && invites[0] && getCardMode(invites[0]) === 'redirect')) {
       var target = invites[0];
       if (target) {
         startRedirect(target);
