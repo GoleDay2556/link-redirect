@@ -453,11 +453,54 @@
     el.appendChild(link);
   }
 
+  function applyMeta(meta) {
+    if (!meta) return;
+
+    if (meta.title) {
+      document.title = meta.title;
+      setMetaContent('ogTitle', meta.title);
+      setMetaContent('twTitle', meta.title);
+      var headTitle = document.getElementById('pageHeadTitle');
+      if (headTitle) headTitle.textContent = meta.title;
+    }
+
+    if (meta.description) {
+      setMetaContent('metaDesc', meta.description);
+      setMetaContent('ogDesc', meta.description);
+      setMetaContent('twDesc', meta.description);
+    }
+
+    if (meta.image) {
+      setMetaContent('ogImage', meta.image);
+      setMetaContent('twImage', meta.image);
+    }
+
+    if (meta.color) {
+      setMetaContent('metaColor', meta.color);
+    }
+
+    if (meta.siteName) {
+      setMetaContent('ogSite', meta.siteName);
+    }
+
+    setMetaContent('ogUrl', window.location.href);
+  }
+
+  function setMetaContent(id, value) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (el.hasAttribute('content')) {
+      el.setAttribute('content', value);
+    }
+  }
+
   function render() {
     if (!config) {
       showEmptyState();
       return;
     }
+
+    applyMeta(config.meta);
 
     var logoEl = document.getElementById('pageLogo');
     if (logoEl) {

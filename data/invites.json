@@ -1,6 +1,13 @@
 {
-  "title": "Invites",
+  "title": "SMP Community — Invites",
   "logo": "",
+  "meta": {
+    "title": "SMP Community — Lancasters Studios",
+    "description": "Join the SMP community. Community-Focused Minecraft server. Anti Pay-to-Win.",
+    "color": "#3A6FFF",
+    "image": "/images/logo-big.png",
+    "siteName": "Lancasters SMP"
+  },
   "invites": [
     {
       "id": "smp-community",
