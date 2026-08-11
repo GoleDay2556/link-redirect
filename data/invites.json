@@ -1,21 +1,7 @@
 {
-  "title": "Lancasters SMP — Links",
-  "logo": "/images/logo-big.png",
+  "title": "Invites",
+  "logo": "",
   "invites": [
-    {
-      "id": "discord",
-      "logo": "/images/logo-sqr.png",
-      "name": "Join our **Discord** Server",
-      "link": "https://discord.lancsmp.ru/",
-      "description": "Chat with the community"
-    },
-    {
-      "id": "website",
-      "logo": "/images/logo-sqr.png",
-      "name": "Visit Our **Website**",
-      "link": "https://www.lancsmp.ru/",
-      "description": "Server info, leaderboard, and more"
-    },
     {
       "id": "smp-community",
       "logo": "",
